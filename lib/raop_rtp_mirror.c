@@ -363,6 +363,8 @@ raop_rtp_mirror_thread(void *arg)
                 break;
             }
 
+
+        logger_log(raop_rtp_mirror->logger, LOGGER_DEBUG, "x001: packet[4]: %d",packet[4]);
 	    switch (packet[4]) {
             case  0x00:
                 // Normal video data (VCL NAL)

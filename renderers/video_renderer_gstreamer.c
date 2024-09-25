@@ -130,7 +130,7 @@ void video_renderer_size(float *f_width_source, float *f_height_source, float *f
 
 void  video_renderer_init(logger_t *render_logger, const char *server_name, videoflip_t videoflip[2], const char *parser,
                           const char *decoder, const char *converter, const char *videosink, const bool initial_fullscreen,
-                          const bool video_sync) {
+                          const bool video_sync, const bool use_custom_aspect_ratio, const char *custom_aspect_ratio) {
     GError *error = NULL;
     GstCaps *caps = NULL;
     GstClock *clock = gst_system_clock_obtain();
@@ -161,6 +161,12 @@ void  video_renderer_init(logger_t *render_logger, const char *server_name, vide
     g_string_append(launch, converter);
     g_string_append(launch, " ! ");
     g_string_append(launch, "videoscale ! ");
+    if (use_custom_aspect_ratio) {
+        logger_log(logger, LOGGER_DEBUG, "x001: custom aspect ratio: %s", custom_aspect_ratio);
+        g_string_append(launch, custom_aspect_ratio);
+        g_string_append(launch, " ! ");
+    }    
+
     g_string_append(launch, videosink);
     if (video_sync) {
         g_string_append(launch, " sync=true");
@@ -169,7 +175,7 @@ void  video_renderer_init(logger_t *render_logger, const char *server_name, vide
         g_string_append(launch, " sync=false");
         sync = false;
     }
-    logger_log(logger, LOGGER_DEBUG, "GStreamer video pipeline will be:\n\"%s\"", launch->str);
+    logger_log(logger, LOGGER_DEBUG, "x001: GStreamer video pipeline will be:\n\"%s\"", launch->str);
     renderer->pipeline = gst_parse_launch(launch->str, &error);
     if (error) {
         g_error ("get_parse_launch error (video) :\n %s\n",error->message);

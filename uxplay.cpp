@@ -85,6 +85,8 @@ static bool relaunch_video = false;
 static bool reset_loop = false;
 static unsigned int open_connections= 0;
 static std::string videosink = "autovideosink";
+static bool use_custom_aspect_ratio = true;
+static std::string custom_aspect_ratio = "";
 static videoflip_t videoflip[2] = { NONE , NONE };
 static bool use_video = true;
 static unsigned char compression_type = 0;
@@ -141,6 +143,7 @@ static std::vector <std::string> registered_keys;
 static double db_low = -30.0;
 static double db_high = 0.0;
 static bool taper_volume = false;
+
 
 /* logging */
 
@@ -600,6 +603,7 @@ static void print_info (char *name) {
     printf("-vs ...   Choose the GStreamer videosink; default \"autovideosink\"\n");
     printf("          some choices: ximagesink,xvimagesink,vaapisink,glimagesink,\n");
     printf("          gtksink,waylandsink,osxvideosink,kmssink,d3d11videosink etc.\n");
+    printf("-car ...  Custom aspect ratio step, i.e. video/x-raw,width=800,height=600,pixel-aspect-ratio=110/100 \n");
     printf("-vs 0     Streamed audio only, with no video display window\n");
     printf("-v4l2     Use Video4Linux2 for GPU hardware h264 decoding\n");
     printf("-bt709    Sometimes needed for Raspberry Pi with GStreamer < 1.22 \n"); 
@@ -930,6 +934,11 @@ static void parse_arguments (int argc, char *argv[]) {
             if (!option_has_value(i, argc, arg, argv[i+1])) exit(1);
             videosink.erase();
             videosink.append(argv[++i]);
+        } else if (arg == "-car") {
+            if (!option_has_value(i, argc, arg, argv[i+1])) exit(1);
+            custom_aspect_ratio.erase();
+            custom_aspect_ratio.append(argv[++i]);
+            use_custom_aspect_ratio = true;
         } else if (arg == "-as") {
             if (!option_has_value(i, argc, arg, argv[i+1])) exit(1);
             audiosink.erase();
@@ -2130,7 +2139,7 @@ int main (int argc, char *argv[]) {
 
     if (use_video) {
         video_renderer_init(render_logger, server_name.c_str(), videoflip, video_parser.c_str(),
-                            video_decoder.c_str(), video_converter.c_str(), videosink.c_str(), fullscreen, video_sync);
+                            video_decoder.c_str(), video_converter.c_str(), videosink.c_str(), fullscreen, video_sync, use_custom_aspect_ratio, custom_aspect_ratio.c_str());
         video_renderer_start();
     }
 
@@ -2186,7 +2195,7 @@ int main (int argc, char *argv[]) {
             video_renderer_destroy();
             video_renderer_init(render_logger, server_name.c_str(), videoflip, video_parser.c_str(),
                                 video_decoder.c_str(), video_converter.c_str(), videosink.c_str(), fullscreen,
-                                video_sync);
+                                video_sync, use_custom_aspect_ratio, custom_aspect_ratio.c_str());
             video_renderer_start();
         }
         if (relaunch_video) {
